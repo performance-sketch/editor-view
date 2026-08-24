@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador OBS - 6 URLs YouTube</title>
+
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 32px;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #111;
+    color: #fff;
+  }
+
+  .container {
+    width: min(1100px, 100%);
+    margin: 0 auto;
+  }
+
+  h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+  }
+
+  .subtitle {
+    margin: 0 0 28px;
+    color: #aaa;
+    line-height: 1.5;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  label {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  input {
+    width: 100%;
+    height: 46px;
+    padding: 0 14px;
+    border: 1px solid #444;
+    border-radius: 8px;
+    background: #1d1d1d;
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+  }
+
+  input:focus {
+    border-color: #888;
+  }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    min-height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .primary {
+    background: #fff;
+    color: #000;
+  }
+
+  .secondary {
+    background: #2a2a2a;
+    color: #fff;
+    border: 1px solid #444;
+  }
+
+  .output-title {
+    margin: 0 0 10px;
+    font-size: 18px;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 520px;
+    resize: vertical;
+    padding: 16px;
+    border: 1px solid #444;
+    border-radius: 8px;
+    background: #080808;
+    color: #d9d9d9;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    outline: none;
+  }
+
+  .status {
+    min-height: 22px;
+    margin-top: 10px;
+    color: #bdbdbd;
+    font-size: 13px;
+  }
+
+  @media (max-width: 760px) {
+    body { padding: 20px; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+
+  .manual {
+    margin-top: 40px;
+    padding-top: 32px;
+    border-top: 1px solid #333;
+  }
+
+  .manual h2 {
+    margin: 0 0 8px;
+    font-size: 24px;
+  }
+
+  .manual-intro {
+    margin: 0 0 24px;
+    color: #aaa;
+    line-height: 1.55;
+  }
+
+  .step {
+    margin-bottom: 16px;
+    padding: 18px;
+    border: 1px solid #333;
+    border-radius: 10px;
+    background: #171717;
+  }
+
+  .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+    border-radius: 50%;
+    background: #fff;
+    color: #000;
+    font-weight: 800;
+    vertical-align: middle;
+  }
+
+  .step h3 {
+    display: inline;
+    margin: 0;
+    font-size: 17px;
+  }
+
+  .step p {
+    margin: 12px 0 0 40px;
+    color: #c8c8c8;
+    line-height: 1.55;
+  }
+
+  .step ul {
+    margin: 10px 0 0 58px;
+    padding: 0;
+    color: #c8c8c8;
+    line-height: 1.65;
+  }
+
+  .step code {
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: #080808;
+    color: #fff;
+    font-family: Consolas, Monaco, monospace;
+  }
+
+  .tip {
+    margin-top: 18px;
+    padding: 16px 18px;
+    border-left: 4px solid #fff;
+    background: #1b1b1b;
+    color: #d0d0d0;
+    line-height: 1.55;
+  }
+
+  .obs-settings {
+    width: 100%;
+    margin-top: 14px;
+    border-collapse: collapse;
+    background: #101010;
+  }
+
+  .obs-settings th,
+  .obs-settings td {
+    padding: 10px 12px;
+    border: 1px solid #333;
+    text-align: left;
+  }
+
+  .obs-settings th {
+    background: #1f1f1f;
+    color: #fff;
+  }
+
+  .obs-settings td {
+    color: #ccc;
+  }
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>Gerador de HTML para OBS</h1>
+  <p class="subtitle">
+    Cole os 6 links do YouTube abaixo. O gerador cria o código completo
+    em uma grade 3×2, com autoplay, mudo e controles ocultos.
+  </p>
+
+  <div class="form-grid">
+
+    <div class="field">
+      <label for="url1">URL 1</label>
+      <input id="url1" type="text" placeholder="https://www.youtube.com/watch?v=...">
+    </div>
+
+    <div class="field">
+      <label for="url2">URL 2</label>
+      <input id="url2" type="text" placeholder="https://www.youtube.com/watch?v=...">
+    </div>
+
+    <div class="field">
+      <label for="url3">URL 3</label>
+      <input id="url3" type="text" placeholder="https://www.youtube.com/watch?v=...">
+    </div>
+
+    <div class="field">
+      <label for="url4">URL 4</label>
+      <input id="url4" type="text" placeholder="https://www.youtube.com/watch?v=...">
+    </div>
+
+    <div class="field">
+      <label for="url5">URL 5</label>
+      <input id="url5" type="text" placeholder="https://www.youtube.com/watch?v=...">
+    </div>
+
+    <div class="field">
+      <label for="url6">URL 6</label>
+      <input id="url6" type="text" placeholder="https://www.youtube.com/watch?v=...">
+    </div>
+
+  </div>
+
+  <div class="actions">
+    <button class="primary" id="generateBtn" type="button">Gerar código</button>
+    <button class="secondary" id="exampleBtn" type="button">Preencher exemplo</button>
+    <button class="secondary" id="clearBtn" type="button">Limpar</button>
+    <button class="secondary" id="copyBtn" type="button">Copiar código</button>
+  </div>
+
+  <h2 class="output-title">Código HTML gerado</h2>
+
+  <textarea id="output" spellcheck="false"
+    placeholder="O código completo aparecerá aqui..."></textarea>
+
+  <div class="status" id="status" aria-live="polite"></div>
+
+
+  <section class="manual">
+    <h2>Manual: do link do YouTube até o OBS Studio</h2>
+
+    <p class="manual-intro">
+      Siga este passo a passo sempre que quiser criar ou atualizar o painel
+      com as câmeras do YouTube.
+    </p>
+
+    <div class="step">
+      <span class="step-number">1</span>
+      <h3>Abra este gerador</h3>
+      <p>
+        Dê dois cliques neste arquivo HTML. Ele abrirá no seu navegador
+        (Chrome, Edge ou outro navegador).
+      </p>
+    </div>
+
+    <div class="step">
+      <span class="step-number">2</span>
+      <h3>Cole os links do YouTube</h3>
+      <p>
+        Cole um link em cada campo: URL 1, URL 2, URL 3, URL 4, URL 5 e URL 6.
+        Você pode usar links normais do YouTube, por exemplo:
+        <code>https://www.youtube.com/watch?v=XXXXXXXXXXX</code>
+      </p>
+    </div>
+
+    <div class="step">
+      <span class="step-number">3</span>
+      <h3>Clique em “Gerar código”</h3>
+      <p>
+        O gerador converterá automaticamente os links para o formato correto
+        de incorporação do YouTube e criará o HTML completo no campo
+        “Código HTML gerado”.
+      </p>
+    </div>
+
+    <div class="step">
+      <span class="step-number">4</span>
+      <h3>Copie o código</h3>
+      <p>
+        Clique no botão <strong>“Copiar código”</strong>. Se o navegador bloquear
+        a cópia automática, clique dentro do campo do código, pressione
+        <code>Ctrl + A</code> e depois <code>Ctrl + C</code>.
+      </p>
+    </div>
+
+    <div class="step">
+      <span class="step-number">5</span>
+      <h3>Abra o Bloco de Notas</h3>
+      <p>
+        No Windows, pesquise por <strong>Bloco de Notas</strong> no menu Iniciar
+        e abra um novo arquivo em branco.
+      </p>
+    </div>
+
+    <div class="step">
+      <span class="step-number">6</span>
+      <h3>Cole o código</h3>
+      <p>
+        Dentro do Bloco de Notas, pressione <code>Ctrl + V</code>.
+        Todo o HTML gerado deverá aparecer no arquivo.
+      </p>
+    </div>
+
+    <div class="step">
+      <span class="step-number">7</span>
+      <h3>Salve como arquivo HTML</h3>
+      <p>
+        No Bloco de Notas, clique em <strong>Arquivo → Salvar como</strong>.
+      </p>
+      <ul>
+        <li>Nome sugerido: <code>cameras_obs.html</code></li>
+        <li>Tipo: <strong>Todos os arquivos</strong></li>
+        <li>Codificação: <strong>UTF-8</strong></li>
+        <li>Salve em uma pasta fácil de localizar.</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <span class="step-number">8</span>
+      <h3>Abra o OBS Studio</h3>
+      <p>
+        Abra a cena em que deseja exibir as câmeras.
+        Na área <strong>Fontes</strong>, clique no botão <strong>+</strong>.
+      </p>
+    </div>
+
+    <div class="step">
+      <span class="step-number">9</span>
+      <h3>Adicione uma Fonte de Navegador</h3>
+      <p>
+        Escolha <strong>Navegador / Browser</strong>, crie uma nova fonte
+        e dê um nome como <strong>Monitor de Câmeras</strong>.
+      </p>
+    </div>
+
+    <div class="step">
+      <span class="step-number">10</span>
+      <h3>Selecione o arquivo HTML</h3>
+      <p>
+        Marque a opção <strong>Arquivo local</strong> e clique em
+        <strong>Procurar</strong>. Selecione o arquivo
+        <code>cameras_obs.html</code> que você salvou.
+      </p>
+    </div>
+
+    <div class="step">
+      <span class="step-number">11</span>
+      <h3>Configure o tamanho no OBS</h3>
+      <p>
+        Para usar o layout em 4K, utilize:
+      </p>
+
+      <table class="obs-settings">
+        <thead>
+          <tr>
+            <th>Configuração</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Largura</td>
+            <td>3840</td>
+          </tr>
+          <tr>
+            <td>Altura</td>
+            <td>2160</td>
+          </tr>
+          <tr>
+            <td>FPS personalizado</td>
+            <td>30 ou 60</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="step">
+      <span class="step-number">12</span>
+      <h3>Confirme e carregue as câmeras</h3>
+      <p>
+        Clique em <strong>OK</strong>. O OBS carregará o HTML e os seis players
+        aparecerão automaticamente. Os vídeos são configurados para iniciar
+        mutados e sem os controles tradicionais do player.
+      </p>
+    </div>
+
+    <div class="step">
+      <span class="step-number">13</span>
+      <h3>Para trocar uma câmera depois</h3>
+      <p>
+        Você não precisa reconstruir tudo manualmente. Volte a este gerador,
+        troque apenas o link desejado, clique em <strong>Gerar código</strong>,
+        copie o novo HTML e substitua o conteúdo do seu
+        <code>cameras_obs.html</code>.
+      </p>
+    </div>
+
+    <div class="step">
+      <span class="step-number">14</span>
+      <h3>Atualize no OBS</h3>
+      <p>
+        Depois de salvar a alteração no arquivo, volte ao OBS.
+        Abra as propriedades da Fonte de Navegador e use a opção
+        <strong>Atualizar cache da página atual</strong>, ou desative e ative
+        novamente a fonte para forçar o recarregamento.
+      </p>
+    </div>
+
+    <div class="tip">
+      <strong>Dica:</strong> mantenha sempre o arquivo
+      <code>cameras_obs.html</code> no mesmo local. Assim você pode atualizar
+      apenas o conteúdo do arquivo e o OBS continuará apontando para o mesmo
+      endereço, sem precisar recriar a fonte.
+    </div>
+
+    <div class="tip">
+      <strong>Importante:</strong> algumas transmissões do YouTube podem bloquear
+      reprodução incorporada. Se uma câmera não carregar no OBS, teste o mesmo
+      link diretamente no YouTube e verifique se o proprietário permite
+      reprodução em sites externos.
+    </div>
+
+  </section>
+
+
+</div>
+
+<script>
+(function () {
+
+  const inputs = [
+    document.getElementById("url1"),
+    document.getElementById("url2"),
+    document.getElementById("url3"),
+    document.getElementById("url4"),
+    document.getElementById("url5"),
+    document.getElementById("url6")
+  ];
+
+  const output = document.getElementById("output");
+  const status = document.getElementById("status");
+
+  function getYouTubeId(url) {
+    if (!url) return "";
+
+    try {
+      const parsed = new URL(url.trim());
+      const host = parsed.hostname.replace("www.", "");
+
+      if (host === "youtu.be") {
+        return parsed.pathname.split("/").filter(Boolean)[0] || "";
+      }
+
+      if (host.includes("youtube.com")) {
+        const v = parsed.searchParams.get("v");
+        if (v) return v;
+
+        const parts = parsed.pathname.split("/").filter(Boolean);
+
+        const possiblePrefixes = ["embed", "live", "shorts"];
+        for (const prefix of possiblePrefixes) {
+          const index = parts.indexOf(prefix);
+          if (index !== -1 && parts[index + 1]) {
+            return parts[index + 1];
+          }
+        }
+      }
+    } catch (e) {
+      return "";
+    }
+
+    return "";
+  }
+
+  function makeEmbed(url) {
+    const id = getYouTubeId(url);
+
+    if (!id) return "";
+
+    return "https://www.youtube.com/embed/" + id +
+      "?autoplay=1" +
+      "&mute=1" +
+      "&controls=0" +
+      "&rel=0" +
+      "&modestbranding=1" +
+      "&playsinline=1" +
+      "&iv_load_policy=3" +
+      "&disablekb=1";
+  }
+
+  function escapeHtmlAttribute(value) {
+    return value
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function generateCode() {
+    const rawUrls = inputs.map(input => input.value.trim());
+    const embeds = rawUrls.map(makeEmbed);
+
+    const invalid = embeds
+      .map((value, index) => value ? null : index + 1)
+      .filter(Boolean);
+
+    if (invalid.length) {
+      status.textContent =
+        "Verifique as URLs: " + invalid.map(n => "URL " + n).join(", ");
+      return;
+    }
+
+    const frames = embeds.map((embed, index) => `
+    <section class="card">
+      <div class="label">CÂMERA ${index + 1}</div>
+      <iframe
+        src="${escapeHtmlAttribute(embed)}"
+        allow="autoplay; encrypted-media; picture-in-picture">
+      </iframe>
+    </section>`).join("\n");
+
+    const generated = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OBS - 6 Câmeras</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .grid {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 2px;
+    background: #000;
+  }
+
+  .card {
+    position: relative;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .card iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+    pointer-events: none;
+  }
+
+  .label {
+    position: absolute;
+    z-index: 10;
+    top: 6px;
+    left: 6px;
+    padding: 4px 7px;
+    border-radius: 4px;
+    background: rgba(0,0,0,.55);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    pointer-events: none;
+  }
+
+  .manual {
+    margin-top: 40px;
+    padding-top: 32px;
+    border-top: 1px solid #333;
+  }
+
+  .manual h2 {
+    margin: 0 0 8px;
+    font-size: 24px;
+  }
+
+  .manual-intro {
+    margin: 0 0 24px;
+    color: #aaa;
+    line-height: 1.55;
+  }
+
+  .step {
+    margin-bottom: 16px;
+    padding: 18px;
+    border: 1px solid #333;
+    border-radius: 10px;
+    background: #171717;
+  }
+
+  .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+    border-radius: 50%;
+    background: #fff;
+    color: #000;
+    font-weight: 800;
+    vertical-align: middle;
+  }
+
+  .step h3 {
+    display: inline;
+    margin: 0;
+    font-size: 17px;
+  }
+
+  .step p {
+    margin: 12px 0 0 40px;
+    color: #c8c8c8;
+    line-height: 1.55;
+  }
+
+  .step ul {
+    margin: 10px 0 0 58px;
+    padding: 0;
+    color: #c8c8c8;
+    line-height: 1.65;
+  }
+
+  .step code {
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: #080808;
+    color: #fff;
+    font-family: Consolas, Monaco, monospace;
+  }
+
+  .tip {
+    margin-top: 18px;
+    padding: 16px 18px;
+    border-left: 4px solid #fff;
+    background: #1b1b1b;
+    color: #d0d0d0;
+    line-height: 1.55;
+  }
+
+  .obs-settings {
+    width: 100%;
+    margin-top: 14px;
+    border-collapse: collapse;
+    background: #101010;
+  }
+
+  .obs-settings th,
+  .obs-settings td {
+    padding: 10px 12px;
+    border: 1px solid #333;
+    text-align: left;
+  }
+
+  .obs-settings th {
+    background: #1f1f1f;
+    color: #fff;
+  }
+
+  .obs-settings td {
+    color: #ccc;
+  }
+
+</style>
+</head>
+
+<body>
+
+  <main class="grid">
+${frames}
+  </main>
+
+</body>
+</html>`;
+
+    output.value = generated;
+    status.textContent = "Código gerado com sucesso.";
+  }
+
+  document.getElementById("generateBtn")
+    .addEventListener("click", generateCode);
+
+  document.getElementById("exampleBtn")
+    .addEventListener("click", function () {
+      const examples = [
+        "https://www.youtube.com/watch?v=7ecGJrsCv60",
+        "https://www.youtube.com/watch?v=PhYE9txaPlo",
+        "https://www.youtube.com/watch?v=5iy6o-Se6YE",
+        "https://www.youtube.com/watch?v=ICqyoAgpbO8",
+        "https://www.youtube.com/watch?v=rjMR8NgenTU",
+        "https://www.youtube.com/watch?v=5s5xBvozPtM"
+      ];
+
+      inputs.forEach((input, index) => {
+        input.value = examples[index];
+      });
+
+      status.textContent = "Links de exemplo preenchidos.";
+    });
+
+  document.getElementById("clearBtn")
+    .addEventListener("click", function () {
+      inputs.forEach(input => input.value = "");
+      output.value = "";
+      status.textContent = "";
+      inputs[0].focus();
+    });
+
+  document.getElementById("copyBtn")
+    .addEventListener("click", async function () {
+      if (!output.value.trim()) {
+        status.textContent = "Gere o código antes de copiar.";
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(output.value);
+        status.textContent = "Código copiado.";
+      } catch (e) {
+        output.focus();
+        output.select();
+        status.textContent =
+          "Selecionei o código. Use Ctrl+C para copiar.";
+      }
+    });
+
+})();
+</script>
+
+</body>
+</html>
