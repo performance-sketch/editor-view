@@ -66,18 +66,6 @@
     border-color: #888;
   }
 
-  .fixed-value {
-    display: flex;
-    align-items: center;
-    height: 46px;
-    padding: 0 14px;
-    border: 1px dashed #444;
-    border-radius: 8px;
-    background: #161616;
-    color: #999;
-    font-size: 14px;
-  }
-
   input.invalid {
     border-color: #e5484d;
   }
@@ -257,15 +245,15 @@
 
   <h1>Gerador de HTML para OBS</h1>
   <p class="subtitle">
-    Cole os 6 links do YouTube abaixo. O gerador cria o código completo
+    Cole os 6 links abaixo (YouTube ou Windy). O gerador cria o código completo
     em uma grade 3×2, com autoplay, mudo e controles ocultos.
   </p>
 
   <div class="form-grid">
 
     <div class="field">
-      <label>CÂMERA 1</label>
-      <div class="fixed-value">🌬️ Mapa de vento (Windy) — fixo, Rio de Janeiro</div>
+      <label for="url1">URL 1</label>
+      <input id="url1" type="text" placeholder="Link do YouTube ou do Windy (windy.com/?lat,lon,zoom)">
     </div>
 
     <div class="field">
@@ -331,10 +319,11 @@
       <span class="step-number">2</span>
       <h3>Cole os links do YouTube</h3>
       <p>
-        A CÂMERA 1 já vem fixa com o mapa de vento (Windy) do Rio de Janeiro.
-        Cole um link em cada campo: URL 2, URL 3, URL 4, URL 5 e URL 6.
+        Cole um link em cada campo: URL 1, URL 2, URL 3, URL 4, URL 5 e URL 6.
         Você pode usar links normais do YouTube, por exemplo:
-        <code>https://www.youtube.com/watch?v=XXXXXXXXXXX</code>
+        <code>https://www.youtube.com/watch?v=XXXXXXXXXXX</code>, ou um link
+        do Windy para exibir um mapa do tempo, por exemplo:
+        <code>https://www.windy.com/?-22.980,-43.212,11</code>
       </p>
     </div>
 
@@ -504,6 +493,7 @@
 (function () {
 
   const inputs = [
+    document.getElementById("url1"),
     document.getElementById("url2"),
     document.getElementById("url3"),
     document.getElementById("url4"),
@@ -513,15 +503,6 @@
 
   const output = document.getElementById("output");
   const status = document.getElementById("status");
-
-  const FIXED_CAMERA_1 = {
-    label: "CÂMERA 1",
-    embed: "https://embed.windy.com/embed2.html" +
-      "?lat=-22.980&lon=-43.212&detailLat=-22.980&detailLon=-43.212" +
-      "&zoom=11&level=surface&overlay=wind&menu=&message=true" +
-      "&marker=true&calendar=now&pressure=&type=map&location=coordinates" +
-      "&detail=&metricWind=default&metricTemp=default&radarRange=-1"
-  };
 
   function normalizeUrl(raw) {
     let value = (raw || "")
@@ -537,31 +518,10 @@
     return value;
   }
 
-  function resolveYouTubeSource(url) {
-    const normalized = normalizeUrl(url);
-
-    if (!normalized) {
-      return { error: "campo vazio" };
-    }
-
-    let parsed;
-    try {
-      parsed = new URL(normalized);
-    } catch (e) {
-      return { error: "link inválido" };
-    }
-
-    const host = parsed.hostname.toLowerCase()
-      .replace(/^www\./, "")
-      .replace(/^m\./, "");
-
+  function resolveYouTube(parsed, host) {
     if (host === "youtu.be") {
       const id = parsed.pathname.split("/").filter(Boolean)[0];
       return id ? { id } : { error: "sem ID após youtu.be/" };
-    }
-
-    if (host !== "youtube.com" && !host.endsWith(".youtube.com")) {
-      return { error: "não é um link do YouTube" };
     }
 
     const v = parsed.searchParams.get("v");
@@ -589,7 +549,50 @@
       };
     }
 
-    return { error: "formato de link não reconhecido" };
+    return { error: "formato de link do YouTube não reconhecido" };
+  }
+
+  function resolveWindy(parsed) {
+    const raw = parsed.search.replace(/^\?/, "") || parsed.hash.replace(/^#/, "");
+    const parts = raw.split(",");
+    const lat = parseFloat(parts[0]);
+    const lon = parseFloat(parts[1]);
+    const zoom = parseInt(parts[2], 10);
+
+    if (Number.isNaN(lat) || Number.isNaN(lon)) {
+      return { error: "não encontrei as coordenadas no link do Windy" };
+    }
+
+    return { windy: { lat, lon, zoom: Number.isNaN(zoom) ? 8 : zoom } };
+  }
+
+  function resolveSource(url) {
+    const normalized = normalizeUrl(url);
+
+    if (!normalized) {
+      return { error: "campo vazio" };
+    }
+
+    let parsed;
+    try {
+      parsed = new URL(normalized);
+    } catch (e) {
+      return { error: "link inválido" };
+    }
+
+    const host = parsed.hostname.toLowerCase()
+      .replace(/^www\./, "")
+      .replace(/^m\./, "");
+
+    if (host === "youtu.be" || host === "youtube.com" || host.endsWith(".youtube.com")) {
+      return resolveYouTube(parsed, host);
+    }
+
+    if (host === "windy.com" || host.endsWith(".windy.com")) {
+      return resolveWindy(parsed);
+    }
+
+    return { error: "link não suportado — use um link do YouTube ou do Windy" };
   }
 
   function makeEmbed(source) {
@@ -613,6 +616,18 @@
         "&controls=0";
     }
 
+    if (source.windy) {
+      return "https://embed.windy.com/embed2.html" +
+        "?lat=" + source.windy.lat +
+        "&lon=" + source.windy.lon +
+        "&detailLat=" + source.windy.lat +
+        "&detailLon=" + source.windy.lon +
+        "&zoom=" + source.windy.zoom +
+        "&level=surface&overlay=wind&menu=&message=true" +
+        "&marker=true&calendar=now&pressure=&type=map&location=coordinates" +
+        "&detail=&metricWind=default&metricTemp=default&radarRange=-1";
+    }
+
     return "";
   }
 
@@ -627,7 +642,7 @@
   function generateCode() {
     inputs.forEach(input => input.classList.remove("invalid"));
 
-    const sources = inputs.map(input => resolveYouTubeSource(input.value));
+    const sources = inputs.map(input => resolveSource(input.value));
     const embeds = sources.map(makeEmbed);
 
     const invalid = sources
@@ -638,23 +653,18 @@
       invalid.forEach(({ index }) => inputs[index].classList.add("invalid"));
       status.classList.add("error");
       status.textContent = invalid
-        .map(({ index, error }) => "URL " + (index + 2) + ": " + error)
+        .map(({ index, error }) => "URL " + (index + 1) + ": " + error)
         .join(" | ");
       return;
     }
 
     status.classList.remove("error");
 
-    const cameras = [
-      FIXED_CAMERA_1,
-      ...embeds.map((embed, index) => ({ label: "CÂMERA " + (index + 2), embed }))
-    ];
-
-    const frames = cameras.map(camera => `
+    const frames = embeds.map((embed, index) => `
     <section class="card">
-      <div class="label">${camera.label}</div>
+      <div class="label">CÂMERA ${index + 1}</div>
       <iframe
-        src="${escapeHtmlAttribute(camera.embed)}"
+        src="${escapeHtmlAttribute(embed)}"
         allow="autoplay; encrypted-media; picture-in-picture">
       </iframe>
     </section>`).join("\n");
@@ -840,6 +850,7 @@ ${frames}
   document.getElementById("exampleBtn")
     .addEventListener("click", function () {
       const examples = [
+        "https://www.windy.com/?-22.980,-43.212,11",
         "https://www.youtube.com/watch?v=7ecGJrsCv60",
         "https://www.youtube.com/watch?v=PhYE9txaPlo",
         "https://www.youtube.com/watch?v=5iy6o-Se6YE",
