@@ -66,6 +66,14 @@
     border-color: #888;
   }
 
+  input.invalid {
+    border-color: #e5484d;
+  }
+
+  input.invalid:focus {
+    border-color: #e5484d;
+  }
+
   .actions {
     display: flex;
     gap: 12px;
@@ -119,6 +127,10 @@
     margin-top: 10px;
     color: #bdbdbd;
     font-size: 13px;
+  }
+
+  .status.error {
+    color: #ff8a8a;
   }
 
   @media (max-width: 760px) {
@@ -490,52 +502,97 @@
   const output = document.getElementById("output");
   const status = document.getElementById("status");
 
-  function getYouTubeId(url) {
-    if (!url) return "";
+  function normalizeUrl(raw) {
+    let value = (raw || "")
+      .trim()
+      .replace(/[​-‍﻿]/g, "");
 
+    if (!value) return "";
+
+    if (!/^https?:\/\//i.test(value)) {
+      value = "https://" + value.replace(/^\/\//, "");
+    }
+
+    return value;
+  }
+
+  function resolveYouTubeSource(url) {
+    const normalized = normalizeUrl(url);
+
+    if (!normalized) {
+      return { error: "campo vazio" };
+    }
+
+    let parsed;
     try {
-      const parsed = new URL(url.trim());
-      const host = parsed.hostname.replace("www.", "");
-
-      if (host === "youtu.be") {
-        return parsed.pathname.split("/").filter(Boolean)[0] || "";
-      }
-
-      if (host.includes("youtube.com")) {
-        const v = parsed.searchParams.get("v");
-        if (v) return v;
-
-        const parts = parsed.pathname.split("/").filter(Boolean);
-
-        const possiblePrefixes = ["embed", "live", "shorts"];
-        for (const prefix of possiblePrefixes) {
-          const index = parts.indexOf(prefix);
-          if (index !== -1 && parts[index + 1]) {
-            return parts[index + 1];
-          }
-        }
-      }
+      parsed = new URL(normalized);
     } catch (e) {
-      return "";
+      return { error: "link inválido" };
+    }
+
+    const host = parsed.hostname.toLowerCase()
+      .replace(/^www\./, "")
+      .replace(/^m\./, "");
+
+    if (host === "youtu.be") {
+      const id = parsed.pathname.split("/").filter(Boolean)[0];
+      return id ? { id } : { error: "sem ID após youtu.be/" };
+    }
+
+    if (host !== "youtube.com" && !host.endsWith(".youtube.com")) {
+      return { error: "não é um link do YouTube" };
+    }
+
+    const v = parsed.searchParams.get("v");
+    if (v) return { id: v };
+
+    const parts = parsed.pathname.split("/").filter(Boolean);
+
+    const channelIndex = parts.indexOf("channel");
+    if (channelIndex !== -1 && parts[channelIndex + 1]) {
+      return { channelId: parts[channelIndex + 1] };
+    }
+
+    const idPrefixes = ["embed", "live", "shorts", "v"];
+    for (const prefix of idPrefixes) {
+      const index = parts.indexOf(prefix);
+      if (index !== -1 && parts[index + 1]) {
+        return { id: parts[index + 1] };
+      }
+    }
+
+    if (parts.includes("live")) {
+      return {
+        error: "link de canal (@" + (parts[0] || "handle") +
+          ") sem ID — use o link direto do vídeo/transmissão, ou o link com /channel/UC.../live"
+      };
+    }
+
+    return { error: "formato de link não reconhecido" };
+  }
+
+  function makeEmbed(source) {
+    if (source.id) {
+      return "https://www.youtube.com/embed/" + source.id +
+        "?autoplay=1" +
+        "&mute=1" +
+        "&controls=0" +
+        "&rel=0" +
+        "&modestbranding=1" +
+        "&playsinline=1" +
+        "&iv_load_policy=3" +
+        "&disablekb=1";
+    }
+
+    if (source.channelId) {
+      return "https://www.youtube.com/embed/live_stream" +
+        "?channel=" + source.channelId +
+        "&autoplay=1" +
+        "&mute=1" +
+        "&controls=0";
     }
 
     return "";
-  }
-
-  function makeEmbed(url) {
-    const id = getYouTubeId(url);
-
-    if (!id) return "";
-
-    return "https://www.youtube.com/embed/" + id +
-      "?autoplay=1" +
-      "&mute=1" +
-      "&controls=0" +
-      "&rel=0" +
-      "&modestbranding=1" +
-      "&playsinline=1" +
-      "&iv_load_policy=3" +
-      "&disablekb=1";
   }
 
   function escapeHtmlAttribute(value) {
@@ -547,18 +604,25 @@
   }
 
   function generateCode() {
-    const rawUrls = inputs.map(input => input.value.trim());
-    const embeds = rawUrls.map(makeEmbed);
+    inputs.forEach(input => input.classList.remove("invalid"));
 
-    const invalid = embeds
-      .map((value, index) => value ? null : index + 1)
+    const sources = inputs.map(input => resolveYouTubeSource(input.value));
+    const embeds = sources.map(makeEmbed);
+
+    const invalid = sources
+      .map((source, index) => embeds[index] ? null : { index, error: source.error })
       .filter(Boolean);
 
     if (invalid.length) {
-      status.textContent =
-        "Verifique as URLs: " + invalid.map(n => "URL " + n).join(", ");
+      invalid.forEach(({ index }) => inputs[index].classList.add("invalid"));
+      status.classList.add("error");
+      status.textContent = invalid
+        .map(({ index, error }) => "URL " + (index + 1) + ": " + error)
+        .join(" | ");
       return;
     }
+
+    status.classList.remove("error");
 
     const frames = embeds.map((embed, index) => `
     <section class="card">
@@ -760,15 +824,21 @@ ${frames}
 
       inputs.forEach((input, index) => {
         input.value = examples[index];
+        input.classList.remove("invalid");
       });
 
+      status.classList.remove("error");
       status.textContent = "Links de exemplo preenchidos.";
     });
 
   document.getElementById("clearBtn")
     .addEventListener("click", function () {
-      inputs.forEach(input => input.value = "");
+      inputs.forEach(input => {
+        input.value = "";
+        input.classList.remove("invalid");
+      });
       output.value = "";
+      status.classList.remove("error");
       status.textContent = "";
       inputs[0].focus();
     });
