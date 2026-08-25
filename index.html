@@ -66,6 +66,18 @@
     border-color: #888;
   }
 
+  .fixed-value {
+    display: flex;
+    align-items: center;
+    height: 46px;
+    padding: 0 14px;
+    border: 1px dashed #444;
+    border-radius: 8px;
+    background: #161616;
+    color: #999;
+    font-size: 14px;
+  }
+
   input.invalid {
     border-color: #e5484d;
   }
@@ -252,8 +264,8 @@
   <div class="form-grid">
 
     <div class="field">
-      <label for="url1">URL 1</label>
-      <input id="url1" type="text" placeholder="https://www.youtube.com/watch?v=...">
+      <label>CÂMERA 1</label>
+      <div class="fixed-value">🌬️ Mapa de vento (Windy) — fixo, Rio de Janeiro</div>
     </div>
 
     <div class="field">
@@ -319,7 +331,8 @@
       <span class="step-number">2</span>
       <h3>Cole os links do YouTube</h3>
       <p>
-        Cole um link em cada campo: URL 1, URL 2, URL 3, URL 4, URL 5 e URL 6.
+        A CÂMERA 1 já vem fixa com o mapa de vento (Windy) do Rio de Janeiro.
+        Cole um link em cada campo: URL 2, URL 3, URL 4, URL 5 e URL 6.
         Você pode usar links normais do YouTube, por exemplo:
         <code>https://www.youtube.com/watch?v=XXXXXXXXXXX</code>
       </p>
@@ -491,7 +504,6 @@
 (function () {
 
   const inputs = [
-    document.getElementById("url1"),
     document.getElementById("url2"),
     document.getElementById("url3"),
     document.getElementById("url4"),
@@ -501,6 +513,15 @@
 
   const output = document.getElementById("output");
   const status = document.getElementById("status");
+
+  const FIXED_CAMERA_1 = {
+    label: "CÂMERA 1",
+    embed: "https://embed.windy.com/embed2.html" +
+      "?lat=-22.980&lon=-43.212&detailLat=-22.980&detailLon=-43.212" +
+      "&zoom=11&level=surface&overlay=wind&menu=&message=true" +
+      "&marker=true&calendar=now&pressure=&type=map&location=coordinates" +
+      "&detail=&metricWind=default&metricTemp=default&radarRange=-1"
+  };
 
   function normalizeUrl(raw) {
     let value = (raw || "")
@@ -617,18 +638,23 @@
       invalid.forEach(({ index }) => inputs[index].classList.add("invalid"));
       status.classList.add("error");
       status.textContent = invalid
-        .map(({ index, error }) => "URL " + (index + 1) + ": " + error)
+        .map(({ index, error }) => "URL " + (index + 2) + ": " + error)
         .join(" | ");
       return;
     }
 
     status.classList.remove("error");
 
-    const frames = embeds.map((embed, index) => `
+    const cameras = [
+      FIXED_CAMERA_1,
+      ...embeds.map((embed, index) => ({ label: "CÂMERA " + (index + 2), embed }))
+    ];
+
+    const frames = cameras.map(camera => `
     <section class="card">
-      <div class="label">CÂMERA ${index + 1}</div>
+      <div class="label">${camera.label}</div>
       <iframe
-        src="${escapeHtmlAttribute(embed)}"
+        src="${escapeHtmlAttribute(camera.embed)}"
         allow="autoplay; encrypted-media; picture-in-picture">
       </iframe>
     </section>`).join("\n");
@@ -818,8 +844,7 @@ ${frames}
         "https://www.youtube.com/watch?v=PhYE9txaPlo",
         "https://www.youtube.com/watch?v=5iy6o-Se6YE",
         "https://www.youtube.com/watch?v=ICqyoAgpbO8",
-        "https://www.youtube.com/watch?v=rjMR8NgenTU",
-        "https://www.youtube.com/watch?v=5s5xBvozPtM"
+        "https://www.youtube.com/watch?v=rjMR8NgenTU"
       ];
 
       inputs.forEach((input, index) => {
