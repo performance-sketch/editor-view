@@ -633,7 +633,44 @@
       .replace(/>/g, "&gt;");
   }
 
-  function generateCode() {
+  function shortenUrl(longUrl) {
+    return new Promise((resolve, reject) => {
+      const callbackName = "__isgd_cb_" + Date.now() + "_" + Math.floor(Math.random() * 1e6);
+      const script = document.createElement("script");
+
+      const cleanup = () => {
+        delete window[callbackName];
+        script.remove();
+      };
+
+      const timeoutId = setTimeout(() => {
+        cleanup();
+        reject(new Error("tempo esgotado"));
+      }, 8000);
+
+      window[callbackName] = function (data) {
+        clearTimeout(timeoutId);
+        cleanup();
+        if (data && data.shorturl) {
+          resolve(data.shorturl);
+        } else {
+          reject(new Error((data && data.errormessage) || "falha ao encurtar"));
+        }
+      };
+
+      script.src = "https://is.gd/create.php?format=json&url=" +
+        encodeURIComponent(longUrl) + "&callback=" + callbackName;
+      script.onerror = function () {
+        clearTimeout(timeoutId);
+        cleanup();
+        reject(new Error("erro de rede"));
+      };
+
+      document.head.appendChild(script);
+    });
+  }
+
+  async function generateCode() {
     inputs.forEach(input => input.classList.remove("invalid"));
 
     const sources = inputs.map(input => resolveSource(input.value));
@@ -838,8 +875,19 @@ ${rightPanels}
 </html>`;
 
     output.value = generated;
-    linkOutput.value = buildPlayerLink(embeds);
-    status.textContent = "Código e link gerados com sucesso.";
+
+    const longLink = buildPlayerLink(embeds);
+    linkOutput.value = longLink;
+    linkOutput.dataset.longLink = longLink;
+    status.textContent = "Código gerado. Encurtando link...";
+
+    try {
+      const shortLink = await shortenUrl(longLink);
+      linkOutput.value = shortLink;
+      status.textContent = "Código e link (encurtado) gerados com sucesso.";
+    } catch (e) {
+      status.textContent = "Código gerado. Não foi possível encurtar o link agora — usando o link completo.";
+    }
   }
 
   document.getElementById("generateBtn")
