@@ -633,41 +633,35 @@
       .replace(/>/g, "&gt;");
   }
 
-  function shortenUrl(longUrl) {
-    return new Promise((resolve, reject) => {
-      const callbackName = "__isgd_cb_" + Date.now() + "_" + Math.floor(Math.random() * 1e6);
-      const script = document.createElement("script");
+  async function shortenUrl(longUrl) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-      const cleanup = () => {
-        delete window[callbackName];
-        script.remove();
-      };
+    let response;
+    try {
+      response = await fetch("https://spoo.me/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Accept": "application/json"
+        },
+        body: "url=" + encodeURIComponent(longUrl),
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
-      const timeoutId = setTimeout(() => {
-        cleanup();
-        reject(new Error("tempo esgotado"));
-      }, 8000);
+    if (!response.ok) {
+      throw new Error("HTTP " + response.status);
+    }
 
-      window[callbackName] = function (data) {
-        clearTimeout(timeoutId);
-        cleanup();
-        if (data && data.shorturl) {
-          resolve(data.shorturl);
-        } else {
-          reject(new Error((data && data.errormessage) || "falha ao encurtar"));
-        }
-      };
+    const data = await response.json();
+    if (!data || !data.short_url) {
+      throw new Error((data && data.message) || "falha ao encurtar");
+    }
 
-      script.src = "https://is.gd/create.php?format=json&url=" +
-        encodeURIComponent(longUrl) + "&callback=" + callbackName;
-      script.onerror = function () {
-        clearTimeout(timeoutId);
-        cleanup();
-        reject(new Error("erro de rede"));
-      };
-
-      document.head.appendChild(script);
-    });
+    return data.short_url.replace(/^http:\/\//, "https://");
   }
 
   async function generateCode() {
