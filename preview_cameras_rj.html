@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Preview - Câmeras Selecionadas</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; background: #10171a; color: #e8f0f1; margin: 0; padding: 10px; }
+  h1 { font-size: 16px; margin: 0 0 2px; }
+  p.sub { color: #9db0b3; margin: 0 0 10px; font-size: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(432px, 1fr)); gap: 6px; }
+  .card { background: #172124; border-radius: 6px; overflow: hidden; border: 1px solid #26363a; }
+  .card iframe { width: 100%; height: 378px; border: 0; display: block; background: #000; }
+  .card .label { padding: 4px 8px; font-size: 12px; line-height: 1.3; }
+  .card .label strong { display: block; font-size: 13px; }
+  .card .label span { color: #9db0b3; font-size: 11px; }
+</style>
+</head>
+<body>
+  <h1>Preview local — câmeras selecionadas (CamerasRJ / Prefeitura do Rio)</h1>
+  <p class="sub">5 câmeras + previsão de vento/mar (Windy)</p>
+  <div class="grid">
+    <div class="card">
+      <iframe src="https://player.camerasrj.com.br/camera/612/" allow="autoplay"></iframe>
+      <div class="label"><strong>Ipanema</strong><span>ID 612 — Av. Vieira Souto x R. Francisco Otaviano</span></div>
+    </div>
+    <div class="card">
+      <iframe src="https://player.camerasrj.com.br/camera/7807/" allow="autoplay"></iframe>
+      <div class="label"><strong>Ipanema</strong><span>ID 7807 — Av. Vieira Souto, 80 (FIXA)</span></div>
+    </div>
+    <div class="card">
+      <iframe src="https://player.camerasrj.com.br/camera/1276/" allow="autoplay"></iframe>
+      <div class="label"><strong>Copacabana</strong><span>ID 1276 — Av. Atlântica, alt. Posto 3</span></div>
+    </div>
+    <div class="card">
+      <iframe src="https://player.camerasrj.com.br/camera/1173/" allow="autoplay"></iframe>
+      <div class="label"><strong>Copacabana</strong><span>ID 1173 — Av. Atlântica x R. Figueiredo de Magalhães (FIXA)</span></div>
+    </div>
+    <div class="card">
+      <iframe src="https://player.camerasrj.com.br/camera/68/" allow="autoplay"></iframe>
+      <div class="label"><strong>São Conrado</strong><span>ID 68 — Autoestrada Lagoa-Barra, em frente ao Shopping Fashion Mall</span></div>
+    </div>
+    <div class="card">
+      <iframe src="https://embed.windy.com/embed2.html?lat=-23.019&lon=-43.302&zoom=11&level=surface&overlay=wind&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&detailLat=-23.019&detailLon=-43.302&metricWind=default&metricTemp=default"></iframe>
+      <div class="label"><strong>Windy</strong><span>Vento/mar — Zona Sul do Rio</span></div>
+    </div>
+  </div>
+</body>
+</html>
