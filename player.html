@@ -200,13 +200,15 @@
 (function () {
   const params = new URLSearchParams(location.search);
 
+  const selfHost = location.hostname;
+
   const slots = [
     { id: "climateFrame", param: "climate", hosts: ["embed.windy.com"] },
-    { id: "yt1Frame", param: "yt1", hosts: ["www.youtube.com", "youtube.com"] },
-    { id: "yt2Frame", param: "yt2", hosts: ["www.youtube.com", "youtube.com"] },
-    { id: "yt3Frame", param: "yt3", hosts: ["www.youtube.com", "youtube.com"] },
-    { id: "yt4Frame", param: "yt4", hosts: ["www.youtube.com", "youtube.com"] },
-    { id: "yt5Frame", param: "yt5", hosts: ["www.youtube.com", "youtube.com"] }
+    { id: "yt1Frame", param: "yt1", hosts: ["www.youtube.com", "youtube.com", selfHost] },
+    { id: "yt2Frame", param: "yt2", hosts: ["www.youtube.com", "youtube.com", selfHost] },
+    { id: "yt3Frame", param: "yt3", hosts: ["www.youtube.com", "youtube.com", selfHost] },
+    { id: "yt4Frame", param: "yt4", hosts: ["www.youtube.com", "youtube.com", selfHost] },
+    { id: "yt5Frame", param: "yt5", hosts: ["www.youtube.com", "youtube.com", selfHost] }
   ];
 
   function isSafe(rawUrl, allowedHosts) {

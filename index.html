@@ -258,7 +258,7 @@
 
   <h1>Gerador de Painel de Câmeras — Layout Vertical Rio</h1>
   <p class="subtitle">
-    Cole os 6 links abaixo (YouTube ou Windy). A URL 1 é o mapa do tempo (Windy),
+    Cole os 6 links abaixo (YouTube, stream HLS/.m3u8 ou Windy). A URL 1 é o mapa do tempo (Windy),
     exibido em destaque à esquerda com o logo no canto superior esquerdo; as URLs 2 a 4
     aparecem na coluna direita e as URLs 5 e 6 no canto inferior esquerdo. O gerador cria
     um link direto já nesse layout, com autoplay, mudo e controles ocultos — pronto para
@@ -274,27 +274,27 @@
 
     <div class="field">
       <label for="url2">URL 2 — YouTube 1 (coluna direita)</label>
-      <input id="url2" type="text" placeholder="https://www.youtube.com/watch?v=...">
+      <input id="url2" type="text" placeholder="Link do YouTube ou stream .m3u8">
     </div>
 
     <div class="field">
       <label for="url3">URL 3 — YouTube 2 (coluna direita)</label>
-      <input id="url3" type="text" placeholder="https://www.youtube.com/watch?v=...">
+      <input id="url3" type="text" placeholder="Link do YouTube ou stream .m3u8">
     </div>
 
     <div class="field">
       <label for="url4">URL 4 — YouTube 3 (coluna direita)</label>
-      <input id="url4" type="text" placeholder="https://www.youtube.com/watch?v=...">
+      <input id="url4" type="text" placeholder="Link do YouTube ou stream .m3u8">
     </div>
 
     <div class="field">
       <label for="url5">URL 5 — YouTube 4 (inferior esquerdo)</label>
-      <input id="url5" type="text" placeholder="https://www.youtube.com/watch?v=...">
+      <input id="url5" type="text" placeholder="Link do YouTube ou stream .m3u8">
     </div>
 
     <div class="field">
       <label for="url6">URL 6 — YouTube 5 (inferior esquerdo)</label>
-      <input id="url6" type="text" placeholder="https://www.youtube.com/watch?v=...">
+      <input id="url6" type="text" placeholder="Link do YouTube ou stream .m3u8">
     </div>
 
   </div>
@@ -486,6 +486,7 @@
   const linkOutput = document.getElementById("linkOutput");
 
   const PLAYER_URL = "https://performance-sketch.github.io/editor-view/player.html";
+  const HLS_PLAYER_URL = "https://performance-sketch.github.io/editor-view/hls.html";
 
   function buildPlayerLink(embeds) {
     const params = new URLSearchParams();
@@ -586,7 +587,11 @@
       return resolveWindy(parsed);
     }
 
-    return { error: "link não suportado — use um link do YouTube ou do Windy" };
+    if (/\.m3u8$/i.test(parsed.pathname)) {
+      return { hls: parsed.href };
+    }
+
+    return { error: "link não suportado — use um link do YouTube, do Windy ou um stream HLS (.m3u8)" };
   }
 
   function makeEmbed(source) {
@@ -608,6 +613,10 @@
         "&autoplay=1" +
         "&mute=1" +
         "&controls=0";
+    }
+
+    if (source.hls) {
+      return HLS_PLAYER_URL + "?src=" + encodeURIComponent(source.hls);
     }
 
     if (source.windy) {
